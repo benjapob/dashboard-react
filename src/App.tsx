@@ -31,22 +31,24 @@ function App() {
   const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "https://jsonplaceholder.typicode.com/users",
-        );
-        const result = await response.json();
-        setUsers(result);
-      } catch (error) {
-        setUsers([]);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/users",
+      );
+      const result = await response.json();
+      setUsers(result);
+    } catch {
+      setUsers([]);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -54,7 +56,7 @@ function App() {
     ? "Error al cargar los datos"
     : loading
       ? "Cargando..."
-      : "Dashboard Usuarios";
+      : "Listado Usuarios";
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: User) =>
@@ -88,7 +90,7 @@ function App() {
               )}
             </div>
 
-            <div className="w-25">
+            <div className="d-flex gap-2 w-25">
               <input
                 type="text"
                 placeholder="Buscar usuario..."
@@ -98,6 +100,18 @@ function App() {
                   setSearch(e.target.value);
                 }}
               />
+              <button
+                className="btn btn-outline-secondary rounded-3"
+                onClick={fetchData}
+                disabled={loading}
+                title="Recargar datos"
+              >
+                {loading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  "↺"
+                )}
+              </button>
             </div>
           </div>
 
