@@ -1,37 +1,17 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useEffect, useMemo, useState } from "react";
-
-type User = {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  address: {
-    street: string;
-    suite: string;
-    city: string;
-    zipcode: string;
-    geo: {
-      lat: string;
-      lng: string;
-    };
-  };
-  phone: string;
-  website: string;
-  company: {
-    name: string;
-    catchPhrase: string;
-    bs: string;
-  };
-};
-
-const STORAGE_KEY = 'user-list'
+import { useEffect, useState } from "react";
+import { AddUserModal } from "./components/AddUserModal";
+import { Sidebar } from "./components/Sidebar";
+import { TopBar } from "./components/TopBar";
+import { UserTable } from "./components/UserTable";
+import { STORAGE_KEY } from "./types";
+import type { User } from "./types";
 
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,7 +19,6 @@ function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const parsed = saved ? JSON.parse(saved) : [];
-
       if (parsed.length === 0) {
         const response = await fetch("https://jsonplaceholder.typicode.com/users");
         const result = await response.json();
@@ -55,160 +34,58 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    if (users.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
   }, [users]);
 
-  const title = error
-    ? "Error al cargar los datos"
-    : loading
-      ? "Cargando..."
-      : "Listado Usuarios";
+  const addUser = (user: User) => {
+    setUsers([...users, user]);
+    setShowModal(false);
+  };
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((user: User) =>
-      user.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [users, search]);
+  const deleteUser = (id: string) => {
+    setUsers(users.filter((u) => u.id !== id));
+  };
 
   return (
-    <div
-      className="min-vh-100 py-5"
-      style={{
-        background: "#f4f7fb",
-      }}
-    >
-      <div className="container">
-        <div
-          className="shadow-sm p-4 rounded-4 bg-white"
-          style={{
-            border: "1px solid #e9ecef",
-          }}
-        >
-          {/* HEADER */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 className="fw-bold mb-1">{title}</h2>
+    <div className="d-flex min-vh-100" style={{ background: "#f4f7fb" }}>
+      <Sidebar />
 
+      <div className="flex-grow-1 d-flex flex-column overflow-hidden">
+        <TopBar />
+
+        <main className="flex-grow-1 p-4" style={{ overflowY: "auto" }}>
+          <div className="d-flex justify-content-between align-items-end mb-4">
+            <div>
+              <h4 className="fw-bold mb-0">Gestion de Usuarios</h4>
               {!loading && !error && (
-                <p className="text-secondary mb-0">
-                  {filteredUsers.length} usuarios encontrados
+                <p className="text-secondary mb-0 mt-1 small">
+                  {users.length} usuario{users.length !== 1 ? "s" : ""} en el sistema
                 </p>
               )}
             </div>
-
-            <div className="d-flex gap-2 w-25">
-              <input
-                type="text"
-                placeholder="Buscar usuario..."
-                className="form-control rounded-3"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                }}
-              />
-              <button
-                className="btn btn-outline-secondary rounded-3"
-                onClick={fetchData}
-                disabled={loading}
-                title="Recargar datos"
-              >
-                {loading ? (
-                  <span className="spinner-border spinner-border-sm" role="status" />
-                ) : (
-                  "↺"
-                )}
-              </button>
-            </div>
+            <button className="btn btn-primary rounded-3 px-4" onClick={() => setShowModal(true)}>
+              + Agregar usuario
+            </button>
           </div>
 
-          {/* LOADING */}
-          {loading && (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status"></div>
-
-              <p className="mt-3 text-secondary">Cargando usuarios...</p>
-            </div>
-          )}
-
-          {/* ERROR */}
-          {error && (
-            <div className="alert alert-danger rounded-3">
-              Error al cargar usuarios
-            </div>
-          )}
-
-          {/* TABLE */}
-          {!loading && !error && filteredUsers.length > 0 && (
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr
-                    style={{
-                      borderBottom: "2px solid #dee2e6",
-                    }}
-                  >
-                    <th>ID</th>
-                    <th>Usuario</th>
-                    <th>Email</th>
-                    <th>Dirección</th>
-                    <th>Teléfono</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredUsers.map((user: User) => (
-                    <tr
-                      key={user.id}
-                      style={{
-                        cursor: "pointer",
-                      }}
-                    >
-                      <td>
-                        <span className="badge bg-dark">{user.id}</span>
-                      </td>
-
-                      <td>
-                        <div className="fw-semibold">{user.name}</div>
-
-                        <div className="text-secondary small">
-                          @{user.username}
-                        </div>
-                      </td>
-
-                      <td>{user.email.toLowerCase()}</td>
-
-                      <td>
-                        {user.address.street}, {user.address.suite}
-                        <div className="text-secondary small">
-                          {user.address.city}
-                        </div>
-                      </td>
-
-                      <td>{user.phone}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* EMPTY STATE */}
-          {!loading && !error && filteredUsers.length === 0 && (
-            <div className="text-center py-5">
-              <h5>No se encontraron usuarios</h5>
-
-              <p className="text-secondary">
-                Intenta con otro término de búsqueda
-              </p>
-            </div>
-          )}
-        </div>
+          <UserTable
+            users={users}
+            loading={loading}
+            error={error}
+            onDelete={deleteUser}
+            onReload={fetchData}
+          />
+        </main>
       </div>
+
+      {showModal && (
+        <AddUserModal onClose={() => setShowModal(false)} onAdd={addUser} />
+      )}
     </div>
   );
 }
