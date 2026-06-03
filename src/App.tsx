@@ -25,6 +25,8 @@ type User = {
   };
 };
 
+const STORAGE_KEY = 'user-list'
+
 function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,11 +37,16 @@ function App() {
     setLoading(true);
     setError(false);
     try {
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/users",
-      );
-      const result = await response.json();
-      setUsers(result);
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const parsed = saved ? JSON.parse(saved) : [];
+
+      if (parsed.length === 0) {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+        const result = await response.json();
+        setUsers(result);
+      } else {
+        setUsers(parsed);
+      }
     } catch {
       setUsers([]);
       setError(true);
@@ -51,6 +58,10 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }, [users]);
 
   const title = error
     ? "Error al cargar los datos"
