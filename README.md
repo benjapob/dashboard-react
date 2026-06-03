@@ -1,13 +1,16 @@
 # Dashboard Usuarios
 
-Aplicación web de panel de control (dashboard) que muestra y filtra usuarios obtenidos desde una API REST. Desarrollada con React 19, TypeScript y Bootstrap 5.
+Panel de administración de usuarios desarrollado con React 19, TypeScript y Bootstrap 5. Consume una API REST pública como fuente inicial de datos y persiste los cambios en `localStorage` entre sesiones.
 
 ## Características
 
 - Listado de usuarios consumiendo la API de [JSONPlaceholder](https://jsonplaceholder.typicode.com/users)
+- Persistencia en `localStorage`: los cambios se conservan al recargar la página
+- Alta de usuarios mediante formulario modal con validación
+- Eliminación de usuarios con actualización inmediata de la tabla
 - Búsqueda en tiempo real por nombre (filtrado con `useMemo`)
-- Estado de carga con spinner de Bootstrap
-- Manejo de errores en el fetch
+- Estado de carga con spinner y manejo de errores en el fetch
+- Botón de recarga para re-sincronizar desde la API
 - Tabla responsive con ID, usuario, email, dirección y teléfono
 - Interfaz en español
 
@@ -31,7 +34,7 @@ Aplicación web de panel de control (dashboard) que muestra y filtra usuarios ob
 ```bash
 # Clonar el repositorio
 git clone <url-del-repositorio>
-cd dashboard-react-app
+cd dashboard-react
 
 # Instalar dependencias
 npm install
@@ -54,29 +57,38 @@ La app estará disponible en `http://localhost:5173`.
 ## Estructura del proyecto
 
 ```
-dashboard-react-app/
+dashboard-react/
 ├── public/
-│   ├── favicon.svg
-│   └── icons.svg
+│   └── favicon.svg
 ├── src/
-│   ├── assets/          # Imágenes y SVGs estáticos
-│   ├── App.tsx          # Componente principal con toda la lógica del dashboard
-│   ├── App.css          # Estilos del componente
-│   ├── main.tsx         # Punto de entrada de React
-│   └── index.css        # Estilos globales
+│   ├── assets/              # Imágenes y SVGs estáticos
+│   ├── components/
+│   │   ├── AddUserModal.tsx # Modal de alta de usuarios con validación
+│   │   ├── Sidebar.tsx      # Barra lateral de navegación
+│   │   ├── TopBar.tsx       # Encabezado con breadcrumb y estado de sesión
+│   │   └── UserTable.tsx    # Tabla con búsqueda, carga, error y estado vacío
+│   ├── App.tsx              # Componente raíz: estado global y layout principal
+│   ├── main.tsx             # Punto de entrada de React
+│   ├── types.ts             # Tipos TypeScript y constantes compartidas
+│   └── index.css            # Estilos globales
 ├── index.html
 ├── vite.config.ts
 ├── tsconfig.json
-├── tsconfig.app.json
-├── tsconfig.node.json
-├── eslint.config.js
 └── package.json
 ```
 
 ## Funcionamiento
 
-Al montar el componente `App`, se realiza un `fetch` a `https://jsonplaceholder.typicode.com/users`. Los usuarios se almacenan en estado y se filtran reactivamente según el texto ingresado en el campo de búsqueda usando `useMemo`.
+Al montar el componente `App` se ejecuta `fetchData`:
+
+1. Busca usuarios en `localStorage`.
+2. Si no hay datos guardados, hace fetch a la API de JSONPlaceholder.
+3. Cualquier cambio (alta o baja) se persiste automáticamente en `localStorage`.
+4. `UserTable` filtra el listado en tiempo real usando `useMemo` sobre el término de búsqueda.
 
 ```
-Montaje → useEffect → fetch API → setUsers → useMemo filtra → tabla renderizada
+Montaje → useEffect → localStorage ──(vacío)──→ fetch API → setUsers
+                                  └─(con datos)─→ setUsers
+setUsers → useEffect → localStorage.setItem (persiste cambios)
+setUsers → useMemo filtra → tabla renderizada
 ```

@@ -12,6 +12,8 @@ type Props = {
 export function UserTable({ users, loading, error, onDelete, onReload }: Props) {
   const [search, setSearch] = useState("");
 
+  // Recalcula el filtro solo cuando cambia el listado o el término de búsqueda,
+  // evitando iterar el array completo en cada render del componente padre.
   const filteredUsers = useMemo(
     () => users.filter((u) => u.name.toLowerCase().includes(search.toLowerCase())),
     [users, search]

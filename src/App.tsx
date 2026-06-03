@@ -19,6 +19,8 @@ function App() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const parsed = saved ? JSON.parse(saved) : [];
+      // Prioridad: localStorage > API. Si ya hay datos guardados se evita el fetch
+      // para preservar los cambios del usuario (altas y bajas) entre sesiones.
       if (parsed.length === 0) {
         const response = await fetch("https://jsonplaceholder.typicode.com/users");
         const result = await response.json();
@@ -34,8 +36,10 @@ function App() {
     }
   };
 
+  // Carga inicial al montar el componente.
   useEffect(() => { fetchData(); }, []);
 
+  // Persiste el listado cada vez que cambia, pero solo si hay usuarios.
   useEffect(() => {
     if (users.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(users));

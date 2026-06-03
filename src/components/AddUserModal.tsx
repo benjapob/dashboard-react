@@ -10,6 +10,7 @@ export function AddUserModal({ onClose, onAdd }: Props) {
   const [form, setForm] = useState<NewUserForm>(EMPTY_FORM);
   const [formError, setFormError] = useState("");
 
+  // Actualiza el campo correspondiente usando el atributo `name` del input.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -19,6 +20,7 @@ export function AddUserModal({ onClose, onAdd }: Props) {
       setFormError("Nombre, usuario y email son obligatorios.");
       return;
     }
+    // Date.now() garantiza un ID único sin depender de un backend.
     const newUser: User = {
       id: String(Date.now()),
       name: form.name.trim(),
@@ -38,6 +40,7 @@ export function AddUserModal({ onClose, onAdd }: Props) {
       style={{ background: "rgba(0,0,0,0.45)" }}
       onClick={onClose}
     >
+      {/* stopPropagation evita que el clic dentro del diálogo cierre el modal. */}
       <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content rounded-4 border-0 shadow-lg">
           <div className="modal-header border-0 px-4 pt-4 pb-0">
